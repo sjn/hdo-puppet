@@ -11,71 +11,46 @@ class hdo {
   if $mysql_hdo_password {} else { $mysql_hdo_password = "dont-use-this" }
 
   package { [
-      "python-software-properties",
       "htop",
+      "dpkg",
       "build-essential",
       "libxml2",
       "libxml2-dev",
       "libxslt1-dev",
       "git-core",
-      "libmysqlclient-dev"
+      "ruby1.9.1",
+      "ruby1.9.1-dev",
+      "libmysqlclient-dev",
+      "apache2-dev",
+      "libcurl4-openssl-dev",
     ]: ensure  => present
   }
 
-  exec { "brightbox-ruby-experimental":
-    path    => ["/bin", "/usr/bin"],
-    command => "add-apt-repository ppa:brightbox/ruby-ng-experimental && apt-get update",
-    creates => "/etc/apt/sources.list.d/brightbox-ruby-ng-experimental-lucid.list",
-    require => Package["python-software-properties"],
-  }
-
-  exec { "brightbox-passenger":
-    path    => ["/bin", "/usr/bin"],
-    command => "add-apt-repository ppa:brightbox/passenger && apt-get update",
-    creates => "/etc/apt/sources.list.d/brightbox-passenger-lucid.list",
-    require => Package["python-software-properties"],
-  }
-
-  package { "libapache2-mod-passenger":
-    ensure => present,
-    require => Exec['brightbox-passenger']
-  }
-
-  package { "passenger-common1.9.1":
-    ensure => present,
-    require => Exec['brightbox-passenger']
+  exec { "passenger-apache":
+    path    => ["/bin", "/usr/bin", "/var/lib/gems/1.9.1/gems/passenger-3.0.13/bin"],
+    command => "passenger-install-apache2-module --auto && cd /etc/apache2/mods-enabled",
+    creates => "/etc/apache2/mods-available/passenger.conf",
+    require => Package["passenger-gem"],
   }
 
   define gem ($name) {
     exec { "$name-gem":
-      command => "gem1.9.3 install $name",
-      onlyif  => "gem1.9.3 search -i $name | grep false",
-      require => [Package['ruby1.9.3']]
+      command => "gem1.9.1 install $name",
+      onlyif  => "gem1.9.1 search -i $name | grep false",
+      require => [Package['ruby1.9.1']]
     }
   }
 
   gem { "bundler": name => bundler}
   gem { "builder": name => builder}
   gem { "nokogiri": name => nokogiri, require => Package['libxml2', 'libxml2-dev', 'libxslt1-dev']}
+  gem { "passenger": name => passenger}
 
-  package { "ruby":
-    ensure  => present,
-    require => Exec["brightbox-ruby-experimental"]
-  }
-
-  package { "ruby1.9.3":
-    ensure  => present,
-    require => Exec["brightbox-ruby-experimental"]
-  }
-
-  package { "ruby-switch":
-    ensure  => present,
-    require => Package["ruby1.9.3"]
-  }
-
-  exec { "ruby-switch-set":
-    command => "/usr/bin/ruby-switch --set ruby1.9.1", # actually 1.9.3..
-    require => Package['ruby-switch']
+  # Make the ruby link by default point at 1.9.1
+  file { "/usr/bin/ruby":
+    ensure  => link,
+    target  => "/etc/alternatives/ruby",
+    require => Package['ruby1.9.1']
   }
 
   user { "hdo":
@@ -93,7 +68,7 @@ class hdo {
 
   # avoid puppet bug
   group { "puppet":
-    ensure => present
+     ensure => present
   }
 
   file { "/webapps":
@@ -137,6 +112,13 @@ class hdo {
     grant    => ['all'],
   }
 
+#  file { "/home/hdo/bin/apt-add-repository":
+#    owner   => hdo,
+#    mode    => 755,
+#    content => template("hdo/apt-add-repository"),
+#    require => File["/home/hdo/bin"]
+#  }
+
   file { "/home/hdo/.hdo-database.yml":
     owner   => hdo,
     mode    => 600,
@@ -158,6 +140,7 @@ class hdo {
     owner   => root,
     mode    => 644,
     content => template("hdo/passenger.conf.erb"),
+#    require => Package['passenger'],
     notify  => Service['apache2']
   }
 
