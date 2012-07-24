@@ -1,20 +1,43 @@
-To test the configuration:
+# What is this?
 
-$ git checkout https://github.com/holderdeord/hdo-site.git ../hdo-site
-$ [sudo] gem install vagrant
-$ git submodule update --init
-$ vagrant up
-$ ssh -p 2222 vagrant@localhost "sudo mkdir /home/hdo/.ssh"
-$ cat ~/.ssh/id_dsa.pub | ssh -p 2222 vagrant@localhost "sudo cat >> /home/hdo/.ssh/authorized_keys"
-$ cd ../hdo-site
-$ bundle install
-$ VAGRANT=1 cap deploy
+This is the "Holder de Ord" development VM setup repository.
+
+
+# VM image setup
+
+Full tutorial can be found at http://devops.me/2011/10/05/vagrant/
+
+ $ gem install vagrant
+ $ vagrant box add hdo-squeeze32 ../hdo-squeeze32.box
+
+This image requires an Virtualbox 4.1.16. For installation instructions,
+see http://www.ubuntugeek.com/virtualbox-4-1-16-released-and-ubuntu-installation-instructions-included.html
+
+# When all is downloaded and installed
+
+ $ vagrant up
+
+
+# To test the configuration
+
+ $ git checkout https://github.com/holderdeord/hdo-site.git ../hdo-site
+ $ [sudo] gem install vagrant
+ $ git submodule update --init
+ $ vagrant up
+ $ ssh -p 2222 vagrant@localhost "sudo mkdir -p /home/hdo/.ssh"
+ $ cat ~/.ssh/id_dsa.pub | ssh -p 2222 vagrant@localhost "sudo cat >> /home/hdo/.ssh/authorized_keys"
+ $ cd ../hdo-site
+ $ bundle install
+ $ VAGRANT=1 cap deploy
 
 On the server as root:
 
-$ apt-get install puppet git-core
-$ git clone git://github.com/holderdeord/hdo-puppet.git
-$ cd hdo-puppet
-$ git submodule update --init
-$ FACTER_mysql_root_password=t0ps3cret FACTER_mysql_hdo_password=s3cr3t puppet apply --modulepath=puppet/modules puppet/base.pp
+ $ wget http://apt.puppetlabs.com/puppetlabs-release_1.0-3_all.deb
+ $ dpkg -i puppetlabs-release_1.0-3_all.deb
+ $ apt-get update
+ $ apt-get install puppet git-core
+ $ git clone git://github.com/holderdeord/hdo-puppet.git
+ $ cd hdo-puppet
+ $ git submodule update --init
+ $ FACTER_mysql_root_password=t0ps3cret FACTER_mysql_hdo_password=s3cr3t puppet apply --modulepath=puppet/modules puppet/base.pp
 
