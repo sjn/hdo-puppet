@@ -23,6 +23,8 @@ class hdo {
       "libmysqlclient-dev",
       "apache2-dev",
       "libcurl4-openssl-dev",
+      "libmysqlclient-dev",
+      "imagemagick"
     ]: ensure  => present
   }
 
