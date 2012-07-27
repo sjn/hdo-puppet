@@ -84,6 +84,12 @@ class hdo {
      owner  => hdo
   }
 
+  file { "/webapps/files":
+    ensure => directory,
+    mode   => 775,
+    owner  => hdo
+  }
+
   exec { "hdo-storting-importer":
     command => "/usr/bin/git clone https://github.com/holderdeord/hdo-storting-importer /code/hdo-storting-importer",
     creates => "/code/hdo-storting-importer",
@@ -127,9 +133,18 @@ class hdo {
     require => File["/home/hdo"]
   }
 
+  apache::vhost::redirect { "holderdeord.no":
+    port          => 80,
+    priority      => '10',
+    dest          => "http://beta.holderdeord.no",
+    serveraliases => 'www.holderdeord.no',
+    notify        => Service['apache2']
+  }
+
   apache::vhost { "beta.holderdeord.no":
     vhost_name => "*",
     port       => 80,
+    priority   => '20',
     servername => "beta.holderdeord.no",
     template   => "hdo/vhost.conf.erb",
     docroot    => "/webapps/hdo-site/current/public",
@@ -137,11 +152,12 @@ class hdo {
     notify     => Service['apache2']
   }
 
-  apache::vhost::redirect { "holderdeord.no":
-    port          => 80,
-    dest          => "http://beta.holderdeord.no",
-    serveraliases => 'www.holderdeord.no',
-    notify        => Service['apache2']
+  apache::vhost { "files.holderdeord.no":
+    port     => 80,
+    priority => '30',
+    docroot  => "/webapps/files",
+    notify   => Service['apache2'],
+    require  => File['/webapps/files']
   }
 
   file { "/etc/apache2/conf.d/passenger.conf":
