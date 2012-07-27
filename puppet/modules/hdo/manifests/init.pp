@@ -30,7 +30,7 @@ class hdo {
     path    => ["/bin", "/usr/bin", "/var/lib/gems/1.9.1/gems/passenger-3.0.13/bin"],
     command => "passenger-install-apache2-module --auto && cd /etc/apache2/mods-enabled",
     creates => "/etc/apache2/mods-available/passenger.conf",
-    require => Package["passenger-gem"],
+    require => Gem["passenger"],
   }
 
   define gem ($name) {
@@ -58,7 +58,8 @@ class hdo {
     home       => "/home/hdo",
     managehome => true,
     password   => "7ba6c44a47bd64d32fd2360d70087deaf222d55e",
-    shell      => "/bin/bash"
+    shell      => "/bin/bash",
+    groups     => "sudo"
   }
 
   file { "/home/hdo":
@@ -147,7 +148,7 @@ class hdo {
     owner   => root,
     mode    => 644,
     content => template("hdo/passenger.conf.erb"),
-#    require => Package['passenger'],
+    require => Gem['passenger'],
     notify  => Service['apache2']
   }
 

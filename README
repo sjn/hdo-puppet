@@ -3,11 +3,11 @@
 This is the "Holder de Ord" development VM setup repository.
 
 
-# VM image setup
+# Development VM image setup
 
 Full tutorial can be found at http://devops.me/2011/10/05/vagrant/
 
- $ gem install vagrant
+ $ sudo gem install vagrant
  $ vagrant box add hdo-squeeze32 ../hdo-squeeze32.box
 
 This image requires an Virtualbox 4.1.16. For installation instructions,
@@ -25,12 +25,12 @@ see http://www.ubuntugeek.com/virtualbox-4-1-16-released-and-ubuntu-installation
  $ git submodule update --init
  $ vagrant up
  $ ssh -p 2222 vagrant@localhost "sudo mkdir -p /home/hdo/.ssh"
- $ cat ~/.ssh/id_dsa.pub | ssh -p 2222 vagrant@localhost "sudo cat >> /home/hdo/.ssh/authorized_keys"
+ $ cat ~/.ssh/id_dsa.pub | ssh -p 2222 hdo@localhost "cat >> ~/.ssh/authorized_keys"
  $ cd ../hdo-site
  $ bundle install
  $ VAGRANT=1 cap deploy
 
-On the server as root:
+# On the server as root:
 
  $ wget http://apt.puppetlabs.com/puppetlabs-release_1.0-3_all.deb
  $ dpkg -i puppetlabs-release_1.0-3_all.deb
@@ -41,3 +41,15 @@ On the server as root:
  $ git submodule update --init
  $ FACTER_mysql_root_password=t0ps3cret FACTER_mysql_hdo_password=s3cr3t puppet apply --modulepath=puppet/modules puppet/base.pp
 
+
+# What to do to create the Vagrant .box image
+
+Follow this tutorial: http://vagrantup.com/v1/docs/base_boxes.html
+
+If you create a Virtualbox image named "HDO-Dev-Squeeze", you can recreate
+the vagrant .box image with the following commands:
+
+ $ vagrant box remove hdo-squeeze32
+ $ vagrant package --output ../hdo-squeeze32.box --base ~/VirtualBox\ VMs/HDO-Dev-Squeeze/HDO-Dev-Squeeze.vbox
+
+...and then go to the Development VM image setup step above.
